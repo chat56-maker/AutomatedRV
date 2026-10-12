@@ -4,6 +4,10 @@ Laboratorio privado en español para ejecutar sesiones de remote viewing **reali
 
 Site: https://limen-rv.zeros.chatgpt.site
 
+## Actualización 1.0.1
+
+Corrige el campo `client_id` del callback OAuth y omite `agent_name_hint` al reautorizar una cuenta existente. Si instalaste 1.0.0, detén el proceso con Ctrl+C, reemplaza los archivos del conector con la nueva descarga y vuelve a iniciarlo. No necesitas reinstalar Node.js ni borrar las credenciales. Cierra las ventanas anteriores e inicia una autorización nueva desde el Site.
+
 ## Primer uso
 
 1. Abre el Site e inicia sesión con ChatGPT.
@@ -47,7 +51,7 @@ La UI usa React/Vinext. El servidor del Site corre en Cloudflare Workers. D1 con
 
 El conector Node escucha exclusivamente en `127.0.0.1`. La ventana local evita depender de peticiones mixtas HTTPS → HTTP desde el Site. Verifica el origen exacto del Site, `window.opener` y un canal aleatorio. Su API exige Host/Origin locales y un token efímero de la ventana. No implementa proxy de URLs arbitrarias ni CORS abierto.
 
-OAuth usa Authorization Code + PKCE S256, `state` y `nonce`. La primera autorización utiliza `dynamic_agent_client`; el intercambio usa el `issued_client_id`. Los ID tokens se verifican con `jose`, issuer/audience/exp/nonce y JWKS de OpenAI. Cada cuenta conserva su registro; las renovaciones rotativas se serializan y se guardan atómicamente. Ninguna credencial se entrega al Site. La desconexión intenta revocar el refresh token y elimina las credenciales locales, conservando el identificador de cliente.
+OAuth usa Authorization Code + PKCE S256, `state` y `nonce`. La primera autorización utiliza `dynamic_agent_client`; el intercambio usa el identificador emitido en el parámetro `client_id` del callback. Los ID tokens se verifican con `jose`, issuer/audience/exp/nonce y JWKS de OpenAI. Cada cuenta conserva su registro; las renovaciones rotativas se serializan y se guardan atómicamente. Ninguna credencial se entrega al Site. La desconexión intenta revocar el refresh token y elimina las credenciales locales, conservando el identificador de cliente.
 
 Las inferencias llaman al endpoint oficial `/v1/responses` con `store:false` y `stream:true`. Una llamada sólo se considera completa al recibir `response.completed`. Los errores de límite, los streams incompletos y las salidas inválidas se conservan sin reintentar automáticamente. Iniciar nuevamente el mismo ID no vuelve a ejecutar la sesión. El catálogo se obtiene del endpoint OAuth `/v1/models`, filtrando `visibility=list`.
 

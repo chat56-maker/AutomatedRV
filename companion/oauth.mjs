@@ -40,7 +40,8 @@ export class Accounts {
     const p={state:random(), nonce:random(), verifier:random(), expires:Date.now()+600000, client:old?.client, account:old?.id};
     this.pending=p;
     const u=new URL(AUTH);
-    const params={client_id:old?.client || 'dynamic_agent_client', response_type:'code', redirect_uri:this.redirect, scope:SCOPE, resource:RESOURCE, state:p.state, nonce:p.nonce, code_challenge:createHash('sha256').update(p.verifier).digest('base64url'),code_challenge_method:'S256',agent_name_hint:'Limen RV',ext_agent_host_id:this.data.host};
+    const params={client_id:old?.client || 'dynamic_agent_client', response_type:'code', redirect_uri:this.redirect, scope:SCOPE, resource:RESOURCE, state:p.state, nonce:p.nonce, code_challenge:createHash('sha256').update(p.verifier).digest('base64url'),code_challenge_method:'S256',ext_agent_host_id:this.data.host};
+    if (!old) params.agent_name_hint='Limen RV';
     if (old?.idToken) params.id_token_hint=old.idToken;
     for (const [k,v] of Object.entries(params)) u.searchParams.set(k,v);
     return {url:u.href};
@@ -58,7 +59,10 @@ export class Accounts {
     if (!p || p.expires<Date.now() || params.get('state')!==p.state) throw new Error('La autorización expiró o su estado no coincide. Vuelve a conectar.');
     this.pending=null;
     if (params.has('error')) throw new Error(`Autorización cancelada: ${params.get('error')}`);
-    const client=params.get('issued_client_id') || p.client;
+    // New registrations return the issued value in the client_id query field.
+    // Only a returning authorization may omit it and reuse its pending client.
+    const returnedClient=params.get('client_id');
+    const client=returnedClient===null?p.client:returnedClient;
     if (!client?.startsWith('oaiapp_') || (p.client && client!==p.client) || !params.get('code')) throw new Error('Respuesta OAuth incompleta o cliente incorrecto.');
     const token=await remoteJSON(TOKEN,{method:'POST',body:new URLSearchParams({grant_type:'authorization_code',client_id:client,code:params.get('code'),code_verifier:p.verifier,redirect_uri:this.redirect,resource:RESOURCE})});
     if (!token.id_token || !token.refresh_token || !token.access_token) throw new Error('OAuth no devolvió una sesión completa.');

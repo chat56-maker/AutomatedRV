@@ -14,6 +14,7 @@ if(!Number.isInteger(port)||port<1024||port>65535)throw new Error('Puerto invál
 const local=`http://127.0.0.1:${port}`, token=random();
 const dir=option('--data',process.env.LIMEN_DATA_DIR||join(homedir(),'.config','limen-rv'));
 const root=dirname(fileURLToPath(import.meta.url));
+const {version}=JSON.parse(await readFile(join(root,'package.json'),'utf8'));
 const accounts=await new Accounts(dir,`${local}/auth/callback`).init();
 const jobsDir=join(dir,'jobs');await mkdir(jobsDir,{recursive:true,mode:0o700});
 const loadJobs=[];
@@ -25,8 +26,8 @@ for(const f of await readdir(jobsDir))if(/^[0-9a-f-]{36}\.json$/.test(f)){
 }
 const engine=new Engine({accounts,loadJobs,persist:j=>atomic(join(jobsDir,`${j.id}.json`),j)});
 const escape=s=>s.replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
-const status=()=>({version:'1.0.0',site,...accounts.list(),jobs:[...engine.jobs.values()].map(j=>({id:j.id,code:j.code,status:j.status,updatedAt:j.updatedAt}))});
-const page=(title,content)=>`<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} · Limen</title><style>body{background:#f4f3ee;color:#20251f;font:16px system-ui;max-width:560px;margin:10vh auto;padding:28px}h1{font-size:34px;letter-spacing:-1px}p{line-height:1.6;color:#62655d}button{background:#243b2b;color:white;border:0;padding:14px 20px;border-radius:8px;font:inherit;cursor:pointer;margin:6px 6px 6px 0}button.secondary{background:#e4e7df;color:#243b2b}small{display:block;line-height:1.6;color:#73776c}code{overflow-wrap:anywhere}select{padding:10px;width:100%;margin:12px 0}#message{white-space:pre-wrap}.dot{color:#67864b}</style><body><b class="dot">◉ LIMEN / CONECTOR LOCAL</b><h1>${title}</h1>${content}</body></html>`;
+const status=()=>({version,site,...accounts.list(),jobs:[...engine.jobs.values()].map(j=>({id:j.id,code:j.code,status:j.status,updatedAt:j.updatedAt}))});
+const page=(title,content)=>`<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} · Limen</title><style>body{background:#f4f3ee;color:#20251f;font:16px system-ui;max-width:560px;margin:10vh auto;padding:28px}h1{font-size:34px;letter-spacing:-1px}p{line-height:1.6;color:#62655d}button{background:#243b2b;color:white;border:0;padding:14px 20px;border-radius:8px;font:inherit;cursor:pointer;margin:6px 6px 6px 0}button.secondary{background:#e4e7df;color:#243b2b}small{display:block;line-height:1.6;color:#73776c}code{overflow-wrap:anywhere}select{padding:10px;width:100%;margin:12px 0}#message{white-space:pre-wrap}.dot{color:#67864b}</style><body><b class="dot">◉ LIMEN / CONECTOR LOCAL · ${version}</b><h1>${title}</h1>${content}</body></html>`;
 const server=http.createServer(async(req,res)=>{
   const headers={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','X-Frame-Options':'DENY','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"};
   const send=(code,body,type='application/json')=>{res.writeHead(code,{...headers,'Content-Type':`${type}; charset=utf-8`});res.end(type==='application/json'?JSON.stringify(body):body);};
@@ -62,5 +63,5 @@ const server=http.createServer(async(req,res)=>{
 });
 server.headersTimeout=15000;server.requestTimeout=120000;
 server.on('error',e=>{console.error(e.code==='EADDRINUSE'?`El puerto ${port} ya está ocupado. Cierra el otro conector o usa --port.`:e.message);process.exit(1);});
-server.listen(port,'127.0.0.1',()=>console.log(`Limen está listo.\nSite autorizado: ${site}\nConector: ${local}\nAbre «Conectar» en el Site y mantén esta terminal abierta.\nLas credenciales permanecen en tu equipo.`));
+server.listen(port,'127.0.0.1',()=>console.log(`Limen ${version} está listo.\nSite autorizado: ${site}\nConector: ${local}\nAbre «Conectar» en el Site y mantén esta terminal abierta.\nLas credenciales permanecen en tu equipo.`));
 process.on('SIGINT',()=>{for(const c of engine.controllers.values())c.abort();server.close();setTimeout(()=>process.exit(0),1500).unref();});

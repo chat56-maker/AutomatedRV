@@ -1,5 +1,18 @@
 # Limen — conector local
 
+Versión **1.0.1**. Corrige la recepción de `client_id` en el callback de ChatGPT.
+
+## Actualizar desde 1.0.0
+
+1. Detén el proceso anterior en la terminal con **Ctrl+C** y cierra sus ventanas del navegador.
+2. Descomprime el paquete 1.0.1 y reemplaza los archivos de la carpeta del conector anterior. Conserva `node_modules`; no hay dependencias nuevas.
+3. Desde esa carpeta, ejecuta de nuevo `npm start -- --site https://limen-rv.zeros.chatgpt.site`.
+4. Confirma que la terminal muestra **Limen 1.0.1**. Recarga el Site y pulsa **Abrir conector → Continuar con ChatGPT** para iniciar una autorización nueva.
+
+No recargues el callback fallido: su autorización ya no es reutilizable. No necesitas reinstalar Node.js ni borrar la carpeta de credenciales. Si extrajiste el paquete a una carpeta nueva sin `node_modules`, ejecuta `npm install` una vez antes de iniciarlo.
+
+## Instalar por primera vez
+
 Requiere Node.js 22.13 o posterior. El conector usa el OAuth oficial de ChatGPT para aplicaciones de código abierto. No solicita una API key ni un secreto de cliente.
 
 1. Descomprime esta carpeta y abre una terminal dentro de ella.

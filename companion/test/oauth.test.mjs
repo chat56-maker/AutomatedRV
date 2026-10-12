@@ -20,9 +20,38 @@ test('OAuth validates signed ID token, serializes rotating refresh, and retains 
  const jwt=await new SignJWT({nonce:pending.nonce,email:'test@example.invalid'}).setProtectedHeader({alg:'RS256',kid:'test'}).setIssuer('https://auth.openai.com').setAudience('oaiapp_test').setSubject('test-user').setIssuedAt().setExpirationTime('5m').sign(privateKey);
  let refreshCalls=0;
  globalThis.fetch=async(url,opts)=>{const params=opts.body;if(String(url).endsWith('/revoke'))return new Response('',{status:200});assert.equal(params.get('client_id'),'oaiapp_test');if(params.get('grant_type')==='refresh_token'){refreshCalls++;await new Promise(r=>setTimeout(r,10));return Response.json({access_token:'rotated-access',refresh_token:'rotated-refresh',expires_in:3600});}assert.equal(params.get('code_verifier'),pending.verifier);return Response.json({id_token:jwt,access_token:'test-access',refresh_token:'test-refresh',scope:'openid chatgpt.tokens.use.direct',expires_in:1});};
- await a.callback(new URLSearchParams({state:pending.state,code:'test-code',issued_client_id:'oaiapp_test'}));const id=a.selected().id;
+ // This is the documented OpenAI callback contract. The field is client_id.
+ await a.callback(new URLSearchParams({state:pending.state,code:'test-code',client_id:'oaiapp_test'}));const id=a.selected().id;
  const tokens=await Promise.all(Array.from({length:8},()=>a.access(id)));assert.equal(refreshCalls,1);assert.ok(tokens.every(t=>t==='rotated-access'));
  const saved=JSON.parse(await readFile(join(dir,'accounts.json'),'utf8'));assert.equal(saved.accounts[0].refresh,'rotated-refresh');assert.ok(!JSON.stringify(a.list()).includes('rotated-'));
  assert.equal((await a.logout(id)).revoked,true);assert.equal(a.data.accounts[0].client,'oaiapp_test');assert.equal(a.data.accounts[0].refresh,undefined);assert.equal(a.list().selected,null);
+ }finally{globalThis.fetch=originalFetch;await rm(dir,{recursive:true,force:true});}
+});
+test('returning authorization omits registration-only metadata and rejects a different callback client',async()=>{
+ await mkdir('test/.tmp',{recursive:true});const dir=await mkdtemp('test/.tmp/returning-'),originalFetch=globalThis.fetch;
+ try{const a=await new Accounts(dir,'http://127.0.0.1:1455/auth/callback').init();const id='oaiapp_existing:test-user';
+ a.data.accounts.push({id,client:'oaiapp_existing',sub:'test-user',idToken:'test-id-token',refresh:'test-refresh'});a.data.selected=id;
+ const initial=new URL(a.begin().url);assert.equal(initial.searchParams.get('agent_name_hint'),'Limen RV');
+ const returning=new URL(a.begin(id).url);assert.equal(returning.searchParams.get('client_id'),'oaiapp_existing');assert.equal(returning.searchParams.has('agent_name_hint'),false);assert.equal(returning.searchParams.get('id_token_hint'),'test-id-token');
+ let calls=0;globalThis.fetch=async()=>{calls++;throw new Error('Unexpected token exchange');};
+ await assert.rejects(()=>a.callback(new URLSearchParams({state:a.pending.state,code:'test-code',client_id:'oaiapp_other'})),/cliente incorrecto/);
+ assert.equal(calls,0);assert.equal(a.selected().id,id);assert.equal(a.selected().refresh,'test-refresh');
+ }finally{globalThis.fetch=originalFetch;await rm(dir,{recursive:true,force:true});}
+});
+test('new registration without documented client_id is rejected before token exchange',async()=>{
+ await mkdir('test/.tmp',{recursive:true});const dir=await mkdtemp('test/.tmp/missing-client-'),originalFetch=globalThis.fetch;
+ try{const a=await new Accounts(dir,'http://127.0.0.1:1455/auth/callback').init();let calls=0;globalThis.fetch=async()=>{calls++;throw new Error('Unexpected token exchange');};
+ for(const extra of [{},{issued_client_id:'oaiapp_legacy_wrong_field'}]){a.begin();await assert.rejects(()=>a.callback(new URLSearchParams({state:a.pending.state,code:'test-code',...extra})),/incompleta/);}
+ assert.equal(calls,0);assert.equal(a.list().accounts.length,0);
+ }finally{globalThis.fetch=originalFetch;await rm(dir,{recursive:true,force:true});}
+});
+test('returning callback can omit client_id and uses the pending registration',async()=>{
+ await mkdir('test/.tmp',{recursive:true});const dir=await mkdtemp('test/.tmp/reauthorize-'),originalFetch=globalThis.fetch;
+ try{const a=await new Accounts(dir,'http://127.0.0.1:1455/auth/callback').init();const id='oaiapp_existing:test-user';a.data.accounts.push({id,client:'oaiapp_existing',sub:'test-user',refresh:'old-refresh'});a.data.selected=id;a.begin(id);
+ const pending=a.pending,{privateKey,publicKey}=await generateKeyPair('RS256'),jwk=await exportJWK(publicKey);jwk.kid='returning';
+ a.meta={issuer:'https://auth.openai.com'};a.jwks=createLocalJWKSet({keys:[jwk]});
+ const jwt=await new SignJWT({nonce:pending.nonce}).setProtectedHeader({alg:'RS256',kid:'returning'}).setIssuer('https://auth.openai.com').setAudience('oaiapp_existing').setSubject('test-user').setIssuedAt().setExpirationTime('5m').sign(privateKey);
+ globalThis.fetch=async(_url,opts)=>{assert.equal(opts.body.get('client_id'),'oaiapp_existing');return Response.json({id_token:jwt,access_token:'new-access',refresh_token:'new-refresh',scope:'chatgpt.tokens.use.direct',expires_in:3600});};
+ await a.callback(new URLSearchParams({state:pending.state,code:'test-code'}));assert.equal(a.selected().id,id);assert.equal(a.selected().refresh,'new-refresh');
  }finally{globalThis.fetch=originalFetch;await rm(dir,{recursive:true,force:true});}
 });
