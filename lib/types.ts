@@ -1,0 +1,11 @@
+import type {Config} from './lab';
+export type Impression={id:string;category:string;text:string;intensity:number|null};
+export type Phase={phase:string;at:string;hash:string;raw:string;usage:{input_tokens?:number;output_tokens?:number;total_tokens?:number};data:{impressions:Impression[];relations:string[];hypotheses:{text:string;basedOn:string[]}[];abstention:string|null}};
+export type Session={id:string;model:string;status:string;phases:Phase[];error?:string;failures?:{phase:string;error:string;raw:string}[]};
+export type Assessment={claimId:string;verdict:string;reason:string;evidence:string};
+export type Evaluation={status:string;evidenceHash:string;evidenceVersion:string;model:string;createdAt:string;judges:{id:number;status:string;error?:string;data?:{assessments:Assessment[];summary:string};usage?:{total_tokens?:number}}[]};
+export type Job={id:string;status:string;revision:number;sessions:Session[];config:Config;code:string;error?:string;resultHash?:string;protocolHash:string;evaluation?:Evaluation};
+export type Attachment={id:string;name:string;type:string;size:number;purpose:string};
+export type Run={id:string;code:string;mode:'code'|'sealed';status:string;config:Config;snapshot:Job|null;createdAt:string;updatedAt:string;hasTarget:boolean;targetText?:string;feedback?:{text:string;createdAt:string};evidenceVersion?:string;evaluation?:Evaluation;attachments?:Attachment[];events?:{id:string;type:string;createdAt:string;data:unknown}[]};
+export type Model={id:string;name:string;description:string};
+export type ConnectorState={version:string;selected:string|null;accounts:{id:string;label:string;connected:boolean}[];jobs:{id:string;code:string;status:string}[]};
