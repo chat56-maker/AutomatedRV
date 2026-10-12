@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
-import {Engine,readResponse,digest} from '../engine.mjs';
+import {Engine,readResponse,digest,viewerProtocol} from '../engine.mjs';
 const config={models:['model-a','model-b'],agents:4,concurrency:2,phases:'structured',reasoning:'default',maxTokens:1000,timeout:30,categories:['Presión','Otra'],instructions:'Protocolo de prueba.',judgeModel:'model-b',judges:2};
 const accounts={selected:()=>({id:'test-account'}),access:async()=> 'test-token',models:async()=>[{id:'model-a'},{id:'model-b'}]};
 const capture=JSON.stringify({impressions:[{category:'Presión',text:'Presión leve hacia arriba.',intensity:.4}],relations:['Encima de una superficie.'],hypotheses:[],abstention:null});
@@ -22,9 +22,9 @@ test('parallel execution enforces isolation, concurrency, immutable stages and i
  const engine=new Engine({accounts,persist:async j=>saved.push(j),fetcher:async(_url,opts)=>{active++;maximum=Math.max(maximum,active);calls++;const body=JSON.parse(opts.body);assert.equal(body.store,false);assert.equal(body.stream,true);assert.equal(body.tools,undefined);inputs.push(body);await new Promise(r=>setTimeout(r,4));active--;return stream(capture);}});
  const id=randomUUID();await Promise.all(Array.from({length:5},()=>engine.start({id,code:'TARGET-123',config,privateTarget:'THIS MUST NEVER ENTER PROMPTS'})));
  await until(()=>engine.jobs.get(id).status!=='running');const job=engine.jobs.get(id);
- assert.equal(job.status,'sealed');assert.equal(calls,12);assert.equal(maximum,2);assert.equal(job.resultHash,digest(job.sessions));
- for(const input of inputs){assert.ok(!JSON.stringify(input).includes('THIS MUST'));const user=JSON.parse(input.input[1].content[0].text);assert.equal(user.targetCode,'TARGET-123');if(user.phase==='capture')assert.deepEqual(user.ownSealedPhases,[]);else{const ids=user.ownSealedPhases.flatMap(p=>p.data.impressions.map(c=>c.id.split('-')[0]));assert.equal(new Set(ids).size,1);}}
- for(const s of job.sessions){assert.equal(s.phases.length,3);for(const p of s.phases){const {hash,...raw}=p;assert.equal(hash,digest(raw));}}
+ assert.equal(job.status,'sealed');assert.equal(job.viewerProtocol,viewerProtocol);assert.equal(calls,12);assert.equal(maximum,2);assert.equal(job.resultHash,digest(job.sessions));
+ for(const input of inputs){assert.ok(!JSON.stringify(input).includes('THIS MUST'));const user=JSON.parse(input.input[1].content[0].text);assert.equal(user.targetCode,'TARGET-123');assert.deepEqual(Object.keys(user).sort(),['targetCode','phase','optionalCategories','protocol','ownSealedPhases'].sort());if(user.phase==='capture')assert.deepEqual(user.ownSealedPhases,[]);else{const ids=user.ownSealedPhases.flatMap(p=>p.data.impressions.map(c=>c.id.split('-')[0]));assert.equal(new Set(ids).size,1);}}
+ for(const s of job.sessions){assert.equal(s.phases.length,3);for(const p of s.phases){const {hash,...raw}=p;assert.equal(hash,digest(raw));assert.match(p.promptHash,/^[0-9a-f]{64}$/);}}
  for(const earlier of saved){for(const s of earlier.sessions)for(let i=0;i<s.phases.length;i++)assert.deepEqual(s.phases[i],job.sessions.find(x=>x.id===s.id).phases[i]);}
  await engine.start({id,code:'TARGET-123',config});assert.equal(calls,12);
 });
@@ -45,4 +45,29 @@ test('evaluation starts after sealing, uses separate judges and is versioned',as
  await Promise.all([engine.evaluate(payload),engine.evaluate(payload)]);await until(()=>engine.jobs.get(id).evaluation.status!=='running');
  const evaluation=engine.jobs.get(id).evaluation;assert.equal(evaluation.judges.length,2);assert.ok(evaluation.judges.every(j=>j.status==='completed'));assert.equal(evaluation.evidenceVersion,payload.evidenceVersion);
  const again=await engine.evaluate(payload);assert.equal(again.createdAt,evaluation.createdAt);
+});
+
+const empty=JSON.stringify({impressions:[],relations:[],hypotheses:[],abstention:'No propongo candidatos.'});
+test('empty captures end each viewer, preserve abstentions and consume no later calls or judges',async()=>{
+ let calls=0;const saved=[];
+ const engine=new Engine({accounts,persist:async j=>saved.push(j),fetcher:async()=>{calls++;return stream(empty);}});
+ const id=randomUUID();await engine.start({id,code:'EMPTY',config});
+ await until(()=>engine.jobs.get(id).status!=='running'&&!engine.controllers.size);
+ const job=engine.jobs.get(id);
+ assert.equal(calls,config.agents);assert.equal(job.status,'sealed');assert.equal(job.resultHash,digest(job.sessions));
+ for(const s of job.sessions){assert.equal(s.status,'abstained');assert.equal(s.phases.length,1);assert.equal(s.phases[0].raw,empty);assert.equal(s.phases[0].data.impressions.length,0);assert.equal(s.phases[0].data.abstention,'No propongo candidatos.');}
+ await assert.rejects(()=>engine.evaluate({id}),/No hay impresiones/);assert.equal(calls,config.agents);assert.equal(job.evaluation,undefined);
+ assert.ok(saved.some(j=>j.status==='running'&&j.sessions.some(s=>s.status==='abstained')));
+});
+test('continuation after empty capture is opt-in and only receives own empty record',async()=>{
+ let calls=0;
+ const engine=new Engine({accounts,persist:async()=>{},fetcher:async(_url,opts)=>{calls++;const data=JSON.parse(JSON.parse(opts.body).input[1].content[0].text);if(data.phase==='capture')return stream(empty);assert.equal(data.ownSealedPhases[0].data.impressions.length,0);return stream(capture);}});
+ const id=randomUUID();await engine.start({id,code:'CONTINUE',config:{...config,agents:1,stopOnEmpty:false}});await until(()=>engine.jobs.get(id).status!=='running');
+ const job=engine.jobs.get(id);assert.equal(calls,3);assert.equal(job.sessions[0].status,'completed');assert.equal(job.sessions[0].phases[0].raw,empty);assert.equal(job.sessions[0].phases[1].data.impressions.length,1);
+});
+test('relation-only capture is preserved and continues instead of being declared empty',async()=>{
+ let calls=0;const text=JSON.stringify({impressions:[],relations:['Relación tentativa.'],hypotheses:[],abstention:null});
+ const engine=new Engine({accounts,persist:async()=>{},fetcher:async()=>{calls++;return stream(text);}});
+ const id=randomUUID();await engine.start({id,code:'RELATION',config:{...config,agents:1,stopOnEmpty:true}});await until(()=>engine.jobs.get(id).status!=='running');
+ assert.equal(calls,3);assert.equal(engine.jobs.get(id).sessions[0].status,'completed');
 });

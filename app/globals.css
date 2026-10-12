@@ -16,3 +16,5 @@
 .impression p,.assessment-list strong{color:#485b3d}.impression>span,.phase-label,.raw-record,.relation,.abstention,.audit-hash,.timeline strong,.judge-panel>p,.assessment-list p,.evaluation-heading p,.category-filter button{color:#6a795b}
 .impression small,.assessment-list small,.assessment-list blockquote,.session-header small,.upload-zone small,.timeline time,.seal-note,.budget-line,.budget-line strong{color:#71815f}
 .hero small,.mini-label,.eyebrow,.stat>span,.run-progress>span{color:#6b785b}
+
+.badge.abstained{background:#f2eadb;color:#79592c}

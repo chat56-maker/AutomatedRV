@@ -1,15 +1,21 @@
 # Limen — conector local
 
-Versión **1.0.1**. Corrige la recepción de `client_id` en el callback de ChatGPT.
+Versión **1.0.2**. Revisa el protocolo de captura y cierra los visores que no proponen descriptores, salvo que elijas continuar.
 
-## Actualizar desde 1.0.0
+## Actualizar desde una versión anterior
 
-1. Detén el proceso anterior en la terminal con **Ctrl+C** y cierra sus ventanas del navegador.
-2. Descomprime el paquete 1.0.1 y reemplaza los archivos de la carpeta del conector anterior. Conserva `node_modules`; no hay dependencias nuevas.
+1. Espera a que termine cualquier sesión activa. Detén el proceso anterior con **Ctrl+C** y cierra sus ventanas del navegador.
+2. Descomprime el paquete 1.0.2 y reemplaza los archivos de la carpeta del conector anterior. Conserva `node_modules`; no hay dependencias nuevas.
 3. Desde esa carpeta, ejecuta de nuevo `npm start -- --site https://limen-rv.zeros.chatgpt.site`.
-4. Confirma que la terminal muestra **Limen 1.0.1**. Recarga el Site y pulsa **Abrir conector → Continuar con ChatGPT** para iniciar una autorización nueva.
+4. Confirma que la terminal muestra **Limen 1.0.2**. Recarga el Site y pulsa **Abrir conector**. La cuenta ya autorizada se conserva; autoriza de nuevo sólo si el conector lo solicita.
 
-No recargues el callback fallido: su autorización ya no es reutilizable. No necesitas reinstalar Node.js ni borrar la carpeta de credenciales. Si extrajiste el paquete a una carpeta nueva sin `node_modules`, ejecuta `npm install` una vez antes de iniciarlo.
+No necesitas reinstalar Node.js ni borrar la carpeta de datos y credenciales. Si extrajiste el paquete a una carpeta nueva sin `node_modules`, ejecuta `npm install` una vez antes de iniciarlo. Los registros anteriores permanecen intactos. El protocolo revisado se aplica a nuevas ejecuciones; una sesión cerrada no se reejecuta por actualizar.
+
+## Qué hace el visor IA
+
+Cada visor recibe el código opaco, las instrucciones generales y sus propias fases previas. La captura propone descriptores tentativos, sin exigir acreditar su origen antes de registrarlos. Las fases posteriores organizan esos registros y proponen interpretaciones; la evidencia sólo se aporta a los jueces después del cierre. Las IA ejecutan todas las fases sin pedir impresiones humanas. El programa no contiene una fuente adicional de información del target ni certifica percepción extrasensorial.
+
+Una captura totalmente vacía se conserva como **Sin impresiones** y cierra ese visor por defecto. Puedes elegir continuar en los parámetros del protocolo. Una abstención nunca se reemplaza por texto inventado por el conector. No hay reintentos para forzar impresiones ni evaluaciones de registros sin afirmaciones. Cada nueva ejecución conserva la versión del protocolo de captura y el hash de la entrada de cada fase.
 
 ## Instalar por primera vez
 

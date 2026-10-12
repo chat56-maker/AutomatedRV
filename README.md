@@ -4,6 +4,14 @@ Laboratorio privado en español para ejecutar sesiones de remote viewing **reali
 
 Site: https://limen-rv.zeros.chatgpt.site
 
+## Actualización 1.0.2
+
+Los visores IA realizan la sesión sin impresiones humanas. La captura propone descriptores candidatos no verificados, sin exigir al modelo acreditar un origen extrasensorial antes de registrarlos. Estructura e interpretación trabajan sobre sus propios registros; el contraste se realiza después del cierre. El código es un identificador opaco: no se descifra ni se consulta una fuente del target. El cambio de prompt no garantiza correspondencia ni valida el fenómeno.
+
+Por defecto, una captura totalmente vacía cierra ese visor como **Sin impresiones**, conserva la abstención y evita las llamadas posteriores. El protocolo permite continuar si se elige explícitamente. Las sesiones antiguas no se modifican; la interfaz distingue las que terminaron sin impresiones. No se ejecutan jueces cuando no hay afirmaciones que contrastar. Se registran la versión del protocolo de captura y el hash de la entrada de cada fase.
+
+Descarga el conector **1.0.2**, espera a que terminen las ejecuciones activas, detén el anterior con Ctrl+C y reemplaza sus archivos. Reinícialo con el mismo comando y vuelve a abrir el conector desde el Site. Se conservan las credenciales, datos e instalaciones de Node. El Site detecta versiones anteriores e impide iniciar nuevas sesiones con el protocolo antiguo. Consulta `companion/README.md` para los pasos.
+
 ## Actualización 1.0.1
 
 Corrige el campo `client_id` del callback OAuth y omite `agent_name_hint` al reautorizar una cuenta existente. Si instalaste 1.0.0, detén el proceso con Ctrl+C, reemplaza los archivos del conector con la nueva descarga y vuelve a iniciarlo. No necesitas reinstalar Node.js ni borrar las credenciales. Cierra las ventanas anteriores e inicia una autorización nueva desde el Site.
@@ -25,7 +33,7 @@ También puedes ejecutar el conector directamente desde `companion/` en este rep
 - De 1 a 24 visores, hasta 8 llamadas simultáneas. De 1 a 6 modelos, repartidos en orden circular entre los visores. Catálogo consultado directamente para la cuenta conectada.
 - Captura simple o tres fases: captura, estructura e interpretación. Cada visor recibe solamente sus propios registros anteriores. Nunca los de otros visores.
 - Categorías abiertas y editables: sensaciones, geometría, textura, movimiento, temporalidad, emoción, presencia y cualquier descriptor nuevo. No se exige completar cinco sentidos ni rellenar categorías vacías.
-- Instrucciones, razonamiento, tokens máximos por fase, tiempo límite, modelo de evaluación y 1–3 jueces configurables.
+- Instrucciones, razonamiento, tokens máximos por fase, tiempo límite, continuación tras captura vacía, modelo de evaluación y 1–3 jueces configurables.
 - Registro bruto, impresiones estructuradas, relaciones, interpretaciones con referencias, abstenciones, errores, uso reportado y hashes SHA-256.
 - Feedback posterior con archivos privados. Jueces separados contrastan cada afirmación como compatible, contradictoria o no verificable. Los jueces procesan bloques de hasta 30 afirmaciones para limitar el tamaño de salida.
 - Persistencia en D1/R2, historial personal, exportación JSON, control de cancelación y recuperación de registros locales después de una desconexión.
@@ -70,7 +78,7 @@ npm test
 
 El despliegue usa el flujo de Sites y conserva `.openai/hosting.json`. Las migraciones Drizzle se aplican por Sites antes de publicar el Worker. Para otro Site hay que usar su proyecto y origen autorizado; nunca reutilizar credenciales de despliegue.
 
-Las pruebas usan respuestas y credenciales **ficticias** exclusivamente dentro de los tests. Verifican aislamiento, límite de concurrencia, idempotencia, cancelación, parsers SSE fragmentados, rotación OAuth, cierre e integridad de registros y protección del puente local. No sustituyen una prueba de consentimiento OAuth e inferencia con una cuenta real.
+Las pruebas usan respuestas y credenciales **ficticias** exclusivamente dentro de los tests. Verifican aislamiento, límite de concurrencia, idempotencia, cierre tras abstención, continuación opcional, cancelación, parsers SSE fragmentados, rotación OAuth, cierre e integridad de registros y protección del puente local. No sustituyen una prueba de consentimiento OAuth e inferencia con una cuenta real.
 
 ## Límites explícitos
 
