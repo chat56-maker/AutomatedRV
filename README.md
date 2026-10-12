@@ -4,6 +4,14 @@ Laboratorio privado en español para ejecutar sesiones de remote viewing **reali
 
 Site: https://limen-rv.zeros.chatgpt.site
 
+## Correcciones del Site: protocolo y reconexión
+
+El guardado de preferencias acepta el objeto `{config: ...}` que envía la interfaz. Las pruebas de la ruta verifican guardado, actualización, lectura, rechazo de configuraciones inválidas y comprobación de origen.
+
+Al recargar una pestaña, el Site recupera el enlace con la ventana del conector todavía abierta. Sólo conserva en `sessionStorage` el origen loopback y un identificador aleatorio del canal; espera un mensaje real del conector antes de mostrar una cuenta conectada. La cuenta y los modelos no se restauran desde almacenamiento del navegador. Una pestaña nueva o una ventana del conector cerrada requieren pulsar **Abrir conector**. Si la cuenta permanece autorizada, no hace falta repetir OAuth. El motivo de bloqueo de **Iniciar sesión** aparece junto al botón.
+
+Estas correcciones son del Site y funcionan con el conector 1.0.2 existente.
+
 ## Actualización 1.0.2
 
 Los visores IA realizan la sesión sin impresiones humanas. La captura propone descriptores candidatos no verificados, sin exigir al modelo acreditar un origen extrasensorial antes de registrarlos. Estructura e interpretación trabajan sobre sus propios registros; el contraste se realiza después del cierre. El código es un identificador opaco: no se descifra ni se consulta una fuente del target. El cambio de prompt no garantiza correspondencia ni valida el fenómeno.
@@ -70,7 +78,8 @@ La evaluación se vincula a una versión de evidencia. Cambiar el feedback inval
 ```sh
 npm run install:ci
 node node_modules/typescript/bin/tsc --noEmit
-node --experimental-strip-types --test tests/protocol.test.mjs
+node --experimental-strip-types --test tests/protocol.test.mjs tests/bridge-session.test.mjs
+node --experimental-vm-modules --test tests/state-api.test.mjs
 cd companion
 npm ci
 npm test
