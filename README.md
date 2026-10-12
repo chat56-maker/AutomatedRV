@@ -4,6 +4,19 @@ Laboratorio privado en español para ejecutar sesiones de remote viewing **reali
 
 Site: https://limen-rv.zeros.chatgpt.site
 
+## Actualización 1.0.3 · aislamiento de las instrucciones
+
+La revisión del flujo encontró orientaciones evitables: la captura recibía categorías y texto libre, todas las fases veían las instrucciones de las fases futuras y las etapas posteriores podían agregar descriptores. No se encontró un envío de referencia, archivos o feedback a los visores.
+
+- **Neutral por defecto:** no se envían categorías ni instrucciones personalizadas, incluidas las de preferencias antiguas. El modo personalizado permite enviarlas explícitamente y advierte de su influencia. Se mantiene la libertad de registrar cualquier tipo de impresión.
+- **Código opaco:** el código del operador queda asociado a un UUID aleatorio por ejecución. Los visores reciben sólo ese UUID, que no se deriva del target, del código original ni de un archivo. Ambos quedan en el registro.
+- **Una tarea por fase:** captura registra descriptores; estructura relaciona únicamente la captura; interpretación formula hipótesis con IDs propios. Las etapas posteriores no agregan impresiones. Las salidas que incumplen se guardan como errores con su texto bruto, sin reintentos.
+- **Auditoría:** se guarda la entrada completa de cada llamada, su hash y la versión `blind-phase-isolation-v3`, también si la respuesta falla. La interfaz permite inspeccionarla y el servidor verifica código, fase, campos permitidos y contexto propio. Los registros antiguos no se reconstruyen ni se modifican.
+
+Requiere actualizar el conector a **1.0.3** para nuevas ejecuciones. Descarga el paquete desde Conexión, espera a que terminen las sesiones activas, detén el anterior con Ctrl+C, reemplaza sus archivos y reinícialo. No cambian dependencias, OAuth, modelos seleccionados ni niveles de razonamiento.
+
+Alcance y pruebas: [docs/protocol-audit.md](docs/protocol-audit.md). Estas medidas reducen contaminación del contexto; no eliminan los sesgos del entrenamiento de un modelo ni certifican RV o independencia estadística.
+
 ## Correcciones del Site: protocolo y reconexión
 
 El guardado de preferencias acepta el objeto `{config: ...}` que envía la interfaz. Las pruebas de la ruta verifican guardado, actualización, lectura, rechazo de configuraciones inválidas y comprobación de origen.
@@ -18,7 +31,7 @@ Los visores IA realizan la sesión sin impresiones humanas. La captura propone d
 
 Por defecto, una captura totalmente vacía cierra ese visor como **Sin impresiones**, conserva la abstención y evita las llamadas posteriores. El protocolo permite continuar si se elige explícitamente. Las sesiones antiguas no se modifican; la interfaz distingue las que terminaron sin impresiones. No se ejecutan jueces cuando no hay afirmaciones que contrastar. Se registran la versión del protocolo de captura y el hash de la entrada de cada fase.
 
-Descarga el conector **1.0.2**, espera a que terminen las ejecuciones activas, detén el anterior con Ctrl+C y reemplaza sus archivos. Reinícialo con el mismo comando y vuelve a abrir el conector desde el Site. Se conservan las credenciales, datos e instalaciones de Node. El Site detecta versiones anteriores e impide iniciar nuevas sesiones con el protocolo antiguo. Consulta `companion/README.md` para los pasos.
+Esta sección describe la versión anterior. Para instalar o actualizar utiliza ahora **1.0.3**; consulta `companion/README.md` para los pasos.
 
 ## Actualización 1.0.1
 
@@ -40,7 +53,7 @@ También puedes ejecutar el conector directamente desde `companion/` en este rep
 - **Referencia sellada:** texto y archivos se guardan antes de ejecutar. Las rutas del servidor impiden recuperar los archivos del target hasta el cierre. No se transmiten al conector durante la captura.
 - De 1 a 24 visores, hasta 8 llamadas simultáneas. De 1 a 6 modelos, repartidos en orden circular entre los visores. Catálogo consultado directamente para la cuenta conectada.
 - Captura simple o tres fases: captura, estructura e interpretación. Cada visor recibe solamente sus propios registros anteriores. Nunca los de otros visores.
-- Categorías abiertas y editables: sensaciones, geometría, textura, movimiento, temporalidad, emoción, presencia y cualquier descriptor nuevo. No se exige completar cinco sentidos ni rellenar categorías vacías.
+- Captura neutral sin lista de categorías, ejemplos o pistas. Categorías e instrucciones editables en el modo personalizado explícito. No se exige completar cinco sentidos ni rellenar categorías vacías.
 - Instrucciones, razonamiento, tokens máximos por fase, tiempo límite, continuación tras captura vacía, modelo de evaluación y 1–3 jueces configurables.
 - Registro bruto, impresiones estructuradas, relaciones, interpretaciones con referencias, abstenciones, errores, uso reportado y hashes SHA-256.
 - Feedback posterior con archivos privados. Jueces separados contrastan cada afirmación como compatible, contradictoria o no verificable. Los jueces procesan bloques de hasta 30 afirmaciones para limitar el tamaño de salida.
