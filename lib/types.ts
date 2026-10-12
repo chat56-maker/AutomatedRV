@@ -1,7 +1,9 @@
 import type {Config} from './lab';
-export type Impression={id:string;category:string;text:string;intensity:number|null};
+export type Impression={id:string;category:string;text:string;intensity:number|null;basedOn?:string[];duplicateOf?:string};
+export type GroundedText={text:string;basedOn:string[]};
+export type Composition={overview:GroundedText|null;elements:{label:string;description:string;basedOn:string[]}[];layout:GroundedText[];alternatives:GroundedText[];unresolved:string[]};
 export type PromptMessage={role:string;content:{type:string;text:string}[]};
-export type Phase={phase:string;at:string;hash:string;raw:string;prompt?:PromptMessage[];promptHash?:string;usage:{input_tokens?:number;output_tokens?:number;total_tokens?:number};data:{impressions:Impression[];relations:string[];hypotheses:{text:string;basedOn:string[]}[];abstention:string|null}};
+export type Phase={phase:string;at:string;hash:string;raw:string;prompt?:PromptMessage[];promptHash?:string;usage:{input_tokens?:number;output_tokens?:number;total_tokens?:number};data:{impressions:Impression[];relations:string[];hypotheses:{text:string;basedOn:string[]}[];abstention:string|null;associations?:string[];groups?:{label:string;impressionIds:string[]}[];connections?:({id:string}&GroundedText)[];uncertainties?:string[];composition?:Composition}};
 export type Session={id:string;model:string;status:string;phases:Phase[];error?:string;failures?:{phase:string;error:string;raw:string;prompt?:PromptMessage[];promptHash?:string}[]};
 export type Assessment={claimId:string;verdict:string;reason:string;evidence:string};
 export type Evaluation={status:string;evidenceHash:string;evidenceVersion:string;model:string;createdAt:string;judges:{id:number;status:string;error?:string;data?:{assessments:Assessment[];summary:string};usage?:{total_tokens?:number}}[]};

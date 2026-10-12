@@ -1,13 +1,13 @@
 # Limen — conector local
 
-Versión **1.0.3**. Separa las instrucciones por fase, usa orientación neutral por defecto y conserva los prompts completos para auditoría.
+Versión **1.1.0**. Añade apertura libre, preparación de atención abierta, exploración configurable y composición trazable por visor.
 
 ## Actualizar desde una versión anterior
 
 1. Espera a que termine cualquier sesión activa. Detén el proceso anterior con **Ctrl+C** y cierra sus ventanas del navegador.
-2. Descomprime el paquete 1.0.3 y reemplaza los archivos de la carpeta del conector anterior. Conserva `node_modules`; no hay dependencias nuevas.
+2. Descomprime el paquete 1.1.0 y reemplaza los archivos de la carpeta del conector anterior. Incluye el nuevo `viewer-flow.mjs`. Conserva `node_modules`; no hay dependencias nuevas.
 3. Desde esa carpeta, ejecuta de nuevo `npm start -- --site https://limen-rv.zeros.chatgpt.site`.
-4. Confirma que la terminal muestra **Limen 1.0.3**. Recarga el Site y pulsa **Abrir conector**. La cuenta ya autorizada se conserva; autoriza de nuevo sólo si el conector lo solicita.
+4. Confirma que la terminal muestra **Limen 1.1.0**. Recarga el Site y pulsa **Abrir conector**. La cuenta ya autorizada se conserva; autoriza de nuevo sólo si el conector lo solicita.
 
 No necesitas reinstalar Node.js ni borrar la carpeta de datos y credenciales. Si extrajiste el paquete a una carpeta nueva sin `node_modules`, ejecuta `npm install` una vez antes de iniciarlo. Los registros anteriores permanecen intactos. El protocolo revisado se aplica a nuevas ejecuciones; una sesión cerrada no se reejecuta por actualizar.
 
@@ -17,11 +17,15 @@ Cada ejecución asocia el código del operador a un UUID aleatorio, mostrado en 
 
 En modo **Neutral** (predeterminado, también para preferencias antiguas sin selección explícita) no se envían categorías ni instrucciones libres. El modo **Personalizado** permite esas orientaciones, que pueden sesgar la respuesta y no deben contener pistas del target. Ningún modo elimina los sesgos que trae un modelo de su entrenamiento.
 
-La captura propone descriptores tentativos de cualquier tipo, sin exigir acreditar su origen antes de registrarlos, sin ejemplos de contenidos y sin cuotas. Estructura sólo relaciona esos descriptores; interpretación sólo propone hipótesis con IDs propios. No pueden añadir impresiones nuevas. El incumplimiento se registra como error, conserva el texto bruto y no causa un reintento automático. Las instrucciones de tareas futuras no se envían a las fases anteriores.
+El flujo empieza con **apertura libre**, que registra fragmentos sin categorías ni puntuaciones. Sigue con **una a tres exploraciones** (dos por defecto), donde puede haber muchas impresiones distintas de la misma categoría o sin clasificar. No hay cuotas mínimas. El máximo configurable de 10–60 impresiones por pasada, 40 por defecto, es un techo y no una meta. Las categorías e instrucciones personalizadas sólo se envían en la exploración; nunca en la apertura.
 
-La evidencia sólo se aporta a los jueces después del cierre. Las IA ejecutan todas las fases sin pedir impresiones humanas. El programa no contiene una fuente adicional de información del target ni certifica percepción extrasensorial.
+La **atención abierta** repite una pauta de preparación antes de cada etapa de recogida: suspender expectativas, registrar fragmentos sin exigirles un origen verificable y apartar asociaciones identificativas. Es una adaptación experimental de una práctica contemplativa, no una meditación humana medida ni una garantía de precisión. Puedes seleccionar preparación directa para comparar. No se modifica el nivel de razonamiento, no se simula respiración y no se añade una espera artificial.
 
-Una captura totalmente vacía se conserva como **Sin impresiones** y cierra ese visor por defecto. Puedes elegir continuar en los parámetros del protocolo; aun así las etapas posteriores no añaden impresiones. Una abstención nunca se reemplaza por texto inventado por el conector. No hay reintentos para forzar impresiones ni evaluaciones de registros sin afirmaciones. Cada nueva ejecución conserva la versión del protocolo, el prompt completo y su hash en cada fase y en las llamadas fallidas. Puedes inspeccionarlos desde los registros de cada visor y en la exportación JSON. Los registros anteriores permanecen intactos.
+En el flujo completo, **estructura** agrupa las impresiones y propone relaciones; **composición** produce una descripción integrada con elementos, disposición, alternativas y aspectos sin resolver. Ambas usan sólo registros propios, citados por ID, y no añaden percepciones. Las asociaciones apartadas no se pasan como contexto. Una repetición literal se conserva, pero los jueces no la vuelven a puntuar dentro de ese visor. Las coincidencias entre visores no se consideran evidencia independiente por el mero hecho de repetirse.
+
+El flujo completo usa hasta cinco llamadas por visor con los valores predeterminados: apertura + dos exploraciones + estructura + composición. Una apertura vacía no cierra la sesión: se completan las exploraciones. Si toda la recogida está vacía, el visor cierra como **Sin impresiones** por defecto. Puedes elegir continuar; aun así no se introducen impresiones nuevas durante la síntesis. Ninguna abstención se reemplaza por texto inventado por el conector. Los errores conservan su respuesta bruta y no se reintentan automáticamente.
+
+Las IA ejecutan todas las fases sin pedir impresiones humanas. La evidencia sólo se aporta a los jueces después del cierre. El programa no contiene una fuente adicional de información del target ni certifica percepción extrasensorial. Cada fase conserva prompt, respuesta y hashes; los registros anteriores permanecen intactos. La composición es textual y no genera una imagen con detalles añadidos.
 
 ## Instalar por primera vez
 

@@ -1,5 +1,7 @@
 # Auditoría del flujo de visores · 12 de octubre de 2026
 
+**Documento histórico.** El flujo vigente está descrito en [open-attention-protocol.md](open-attention-protocol.md). Los hallazgos de esta auditoría se conservan para interpretar sesiones anteriores.
+
 Versión del conector: 1.0.3. Protocolo: `blind-phase-isolation-v3`.
 
 ## Hallazgos y cambios

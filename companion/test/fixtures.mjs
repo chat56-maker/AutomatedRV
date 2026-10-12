@@ -1,0 +1,11 @@
+export const config={models:['model-a','model-b'],agents:4,concurrency:2,phases:'structured',reasoning:'default',maxTokens:1000,timeout:30,categories:[],instructions:'',judgeModel:'model-b',judges:2};
+export const accounts={selected:()=>({id:'test-account'}),access:async()=>'test-token',models:async()=>[{id:'model-a'},{id:'model-b'}]};
+export const stream=(text,final='response.completed')=>new Response(`data: ${JSON.stringify({type:'response.output_text.delta',delta:text})}\n\ndata: ${JSON.stringify({type:final,response:{id:'test-response',status:final==='response.completed'?'completed':'failed',usage:{total_tokens:37},error:final==='response.completed'?null:{message:'subscription_sharing_usage_limit_exceeded'}}})}\n\n`,{headers:{'Content-Type':'text/event-stream'}});
+export async function until(fn){const deadline=Date.now()+3000;while(!fn()){if(Date.now()>deadline)throw new Error('Timed out');await new Promise(r=>setTimeout(r,5));}}
+export function reply(data,empty=false){
+ const impressions=data.ownSealedPhases.flatMap(p=>p.data.impressions),ids=impressions.map(c=>c.id);
+ if(data.phase==='opening')return JSON.stringify({perceptions:empty?[]:['Fragmento libre A.','Fragmento libre B.'],abstention:empty?'No aparece nada.':null});
+ if(data.phase.startsWith('capture'))return JSON.stringify({impressions:empty?[]:[{text:`Detalle distinto A en ${data.phase}.`,category:'Misma categoría',basedOn:ids.slice(0,1)},{text:`Detalle distinto B en ${data.phase}.`,category:'Misma categoría',basedOn:[]}],associations:['WITHHELD_ASSOCIATION'],abstention:empty?'Sin novedades.':null});
+ if(data.phase==='structure')return JSON.stringify({groups:ids.length?[{label:'Elemento tentativo',impressionIds:ids.slice(0,2)}]:[],relations:ids.length>1?[{text:'Relación entre los fragmentos.',basedOn:ids.slice(0,2)}]:[],uncertainties:['Ubicación sin determinar.'],abstention:ids.length?null:'Sin base.'});
+ return JSON.stringify({overview:ids.length?{text:'Descripción conjunta tentativa.',basedOn:ids.slice(0,2)}:null,elements:ids.length?[{label:'Elemento A',description:'Componente sustentado.',basedOn:ids.slice(0,1)}]:[],layout:data.ownSealedPhases.flatMap(p=>(p.data.connections||[]).map(r=>({text:r.text,basedOn:[r.id]}))),alternatives:[],unresolved:['Identidad sin resolver.'],abstention:ids.length?null:'Sin base.'});
+}

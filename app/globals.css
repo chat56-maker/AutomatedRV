@@ -18,3 +18,5 @@
 .hero small,.mini-label,.eyebrow,.stat>span,.run-progress>span{color:#6b785b}
 
 .badge.abstained{background:#f2eadb;color:#79592c}
+
+.composition-view>div{margin-top:22px}.composition-view h3{font-size:13px;margin-bottom:14px}.composition-view .impression{margin-top:16px}.composition-view small,.relation small{font:9px ui-monospace,monospace;color:#879578;overflow-wrap:anywhere}.composition-view .revealed p{margin:12px 0;line-height:1.8}.composition-view .relation{margin:16px 0}.composition-view strong{font-size:12px;font-weight:500}

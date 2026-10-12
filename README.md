@@ -4,18 +4,26 @@ Laboratorio privado en español para ejecutar sesiones de remote viewing **reali
 
 Site: https://limen-rv.zeros.chatgpt.site
 
-## Actualización 1.0.3 · aislamiento de las instrucciones
+## Actualización 1.1.0 · apertura, atención y composición
 
-La revisión del flujo encontró orientaciones evitables: la captura recibía categorías y texto libre, todas las fases veían las instrucciones de las fases futuras y las etapas posteriores podían agregar descriptores. No se encontró un envío de referencia, archivos o feedback a los visores.
+Las nuevas sesiones usan el protocolo `open-attention-v4`:
 
-- **Neutral por defecto:** no se envían categorías ni instrucciones personalizadas, incluidas las de preferencias antiguas. El modo personalizado permite enviarlas explícitamente y advierte de su influencia. Se mantiene la libertad de registrar cualquier tipo de impresión.
-- **Código opaco:** el código del operador queda asociado a un UUID aleatorio por ejecución. Los visores reciben sólo ese UUID, que no se deriva del target, del código original ni de un archivo. Ambos quedan en el registro.
-- **Una tarea por fase:** captura registra descriptores; estructura relaciona únicamente la captura; interpretación formula hipótesis con IDs propios. Las etapas posteriores no agregan impresiones. Las salidas que incumplen se guardan como errores con su texto bruto, sin reintentos.
-- **Auditoría:** se guarda la entrada completa de cada llamada, su hash y la versión `blind-phase-isolation-v3`, también si la respuesta falla. La interfaz permite inspeccionarla y el servidor verifica código, fase, campos permitidos y contexto propio. Los registros antiguos no se reconstruyen ni se modifican.
+1. **Apertura libre:** registra cualquier fragmento sin categorías, ejemplos sensoriales ni puntuaciones.
+2. **Exploración:** una a tres pasadas, dos por defecto. Permite varios detalles de la misma categoría o sin clasificar. Cada ampliación puede citar el fragmento anterior; se conservan todos los originales.
+3. **Estructura:** agrupa los registros y propone relaciones con IDs propios, preservando incertidumbres.
+4. **Composición:** presenta una visión de conjunto, elementos, disposición, interpretaciones alternativas y puntos sin resolver. Cada descripción cita impresiones o relaciones propias; no añade nuevas percepciones.
 
-Requiere actualizar el conector a **1.0.3** para nuevas ejecuciones. Descarga el paquete desde Conexión, espera a que terminen las sesiones activas, detén el anterior con Ctrl+C, reemplaza sus archivos y reinícialo. No cambian dependencias, OAuth, modelos seleccionados ni niveles de razonamiento.
+La **atención abierta** prepara la apertura y cada exploración: suspender expectativas, evitar descifrar el código y apartar explicaciones anticipadas. Es una adaptación experimental de pautas humanas de preparación y separación entre descripción e interpretación, no una afirmación de que el modelo alcance un estado fisiológico o de que esta pauta mejore su precisión. Puede desactivarse con preparación directa para comparar. No cambia modelos, razonamiento, tokens ni tiempos seleccionados.
 
-Alcance y pruebas: [docs/protocol-audit.md](docs/protocol-audit.md). Estas medidas reducen contaminación del contexto; no eliminan los sesgos del entrenamiento de un modelo ni certifican RV o independencia estadística.
+No existía un límite de una impresión por categoría. El prompt anterior pedía una selección breve de descriptores; eso podía favorecer respuestas escuetas. Ahora se preservan matices y se permite volver al referente en pasadas adicionales, sin cuotas ni obligación de llenar una escena. El máximo por pasada es configurable entre 10 y 60, con 40 por defecto. No es una cantidad objetivo.
+
+El flujo completo consume hasta **5 llamadas por visor** con los valores iniciales (4–6 según las pasadas); apertura y exploración sin composición consumen 2–4. Los jueces consumen llamadas adicionales. Una apertura vacía no cierra el visor: primero se completan las exploraciones previstas. Si todo sigue vacío se omite la síntesis por defecto.
+
+Se mantiene el código opaco aleatorio, el aislamiento de visores y del feedback, la orientación neutral predeterminada, el registro bruto y el prompt íntegro de cada llamada. Las asociaciones se archivan aparte y no se transmiten a las siguientes fases. Las reapariciones literales dentro de un visor se conservan con un vínculo y no se puntúan de nuevo. No se deduplican percepciones parecidas ni registros de visores diferentes; estos últimos tampoco prueban independencia estadística.
+
+**Actualiza el conector a 1.1.0** desde Conexión antes de iniciar nuevas ejecuciones. Espera a que terminen las sesiones activas, detén el anterior con Ctrl+C, reemplaza todos los archivos del paquete y reinicia. No hay dependencias nuevas; conserva la autorización y los datos. El nuevo archivo `viewer-flow.mjs` es necesario. Las sesiones históricas mantienen sus protocolos y hashes.
+
+Detalles, fuentes y límites: [docs/open-attention-protocol.md](docs/open-attention-protocol.md). La [auditoría de 1.0.3](docs/protocol-audit.md) se conserva como documento histórico.
 
 ## Correcciones del Site: protocolo y reconexión
 
@@ -23,7 +31,7 @@ El guardado de preferencias acepta el objeto `{config: ...}` que envía la inter
 
 Al recargar una pestaña, el Site recupera el enlace con la ventana del conector todavía abierta. Sólo conserva en `sessionStorage` el origen loopback y un identificador aleatorio del canal; espera un mensaje real del conector antes de mostrar una cuenta conectada. La cuenta y los modelos no se restauran desde almacenamiento del navegador. Una pestaña nueva o una ventana del conector cerrada requieren pulsar **Abrir conector**. Si la cuenta permanece autorizada, no hace falta repetir OAuth. El motivo de bloqueo de **Iniciar sesión** aparece junto al botón.
 
-Estas correcciones son del Site y funcionan con el conector 1.0.2 existente.
+Estas correcciones se introdujeron en el Site para el conector 1.0.2. El nuevo protocolo requiere ahora 1.1.0.
 
 ## Actualización 1.0.2
 
@@ -52,9 +60,9 @@ También puedes ejecutar el conector directamente desde `companion/` en este rep
 - **Sólo código:** los visores reciben un identificador. El usuario aporta después texto, imágenes, TXT, PDF o audio como feedback.
 - **Referencia sellada:** texto y archivos se guardan antes de ejecutar. Las rutas del servidor impiden recuperar los archivos del target hasta el cierre. No se transmiten al conector durante la captura.
 - De 1 a 24 visores, hasta 8 llamadas simultáneas. De 1 a 6 modelos, repartidos en orden circular entre los visores. Catálogo consultado directamente para la cuenta conectada.
-- Captura simple o tres fases: captura, estructura e interpretación. Cada visor recibe solamente sus propios registros anteriores. Nunca los de otros visores.
+- Apertura libre y exploración, con estructura y composición opcionales. Cada visor recibe solamente sus propios registros anteriores. Nunca los de otros visores.
 - Captura neutral sin lista de categorías, ejemplos o pistas. Categorías e instrucciones editables en el modo personalizado explícito. No se exige completar cinco sentidos ni rellenar categorías vacías.
-- Instrucciones, razonamiento, tokens máximos por fase, tiempo límite, continuación tras captura vacía, modelo de evaluación y 1–3 jueces configurables.
+- Preparación, pasadas de exploración, máximo de impresiones, instrucciones, razonamiento, tokens por fase, tiempo límite, continuación tras recogida vacía, modelo de evaluación y 1–3 jueces configurables.
 - Registro bruto, impresiones estructuradas, relaciones, interpretaciones con referencias, abstenciones, errores, uso reportado y hashes SHA-256.
 - Feedback posterior con archivos privados. Jueces separados contrastan cada afirmación como compatible, contradictoria o no verificable. Los jueces procesan bloques de hasta 30 afirmaciones para limitar el tamaño de salida.
 - Persistencia en D1/R2, historial personal, exportación JSON, control de cancelación y recuperación de registros locales después de una desconexión.
